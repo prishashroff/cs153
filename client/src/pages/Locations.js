@@ -18,8 +18,9 @@ export default function Locations() {
   const { locations, isTracking, currentLocation, startTracking, stopTracking, fetchLocations, API } = useApp();
   const [showAdd, setShowAdd] = useState(false);
   const [watchId, setWatchId] = useState(null);
-  const [form, setForm] = useState({ name: '', type: 'academic', icon: '📍', lat: '', lng: '', radius: 50 });
+  const [form, setForm] = useState({ name: '', type: 'academic', icon: '🎓', lat: '', lng: '', radius: 50 });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const handleTrackToggle = () => {
     if (isTracking) {
@@ -35,24 +36,44 @@ export default function Locations() {
     if (currentLocation) {
       setForm((f) => ({ ...f, lat: currentLocation.lat.toFixed(6), lng: currentLocation.lng.toFixed(6) }));
     } else {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        setForm((f) => ({ ...f, lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }));
-      });
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setForm((f) => ({ ...f, lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) })),
+        () => setError('Could not get GPS location. Please enter coordinates manually.')
+      );
     }
   };
 
+  const handleTypeSelect = (t) => {
+    setForm((f) => ({ ...f, type: t.value, icon: t.icon }));
+  };
+
   const handleSave = async () => {
-    if (!form.name || !form.lat || !form.lng) return alert('Please fill in name and coordinates.');
+    setError('');
+    if (!form.name.trim()) { setError('Please enter a location name.'); return; }
+    if (!form.lat || !form.lng) { setError('Please enter coordinates or use GPS capture.'); return; }
     setSaving(true);
-    await fetch(`${API}/locations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, lat: parseFloat(form.lat), lng: parseFloat(form.lng), radius: parseInt(form.radius) }),
-    });
-    await fetchLocations();
-    setForm({ name: '', type: 'academic', icon: '📍', lat: '', lng: '', radius: 50 });
-    setShowAdd(false);
-    setSaving(false);
+    try {
+      const res = await fetch(`${API}/locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          type: form.type,
+          icon: form.icon,
+          lat: parseFloat(form.lat),
+          lng: parseFloat(form.lng),
+          radius: parseInt(form.radius) || 50,
+        }),
+      });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      await fetchLocations();
+      setForm({ name: '', type: 'academic', icon: '🎓', lat: '', lng: '', radius: 50 });
+      setShowAdd(false);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const typeConfig = Object.fromEntries(LOCATION_TYPES.map((t) => [t.value, t]));
@@ -65,14 +86,15 @@ export default function Locations() {
           <p style={{ color: 'var(--text2)', marginTop: 4 }}>Known places used to infer your activities</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className={`btn ${isTracking ? 'btn-danger' : 'btn-secondary'}`} onClick={handleTrackToggle}>
+          <button type="button" className={`btn ${isTracking ? 'btn-danger' : 'btn-secondary'}`} onClick={handleTrackToggle}>
             {isTracking ? '⏹ Stop Tracking' : '▶ Start Tracking'}
           </button>
-          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Add Location</button>
+          <button type="button" className="btn btn-primary" onClick={() => { setError(''); setShowAdd(true); }}>
+            + Add Location
+          </button>
         </div>
       </div>
 
-      {/* Current location display */}
       {currentLocation && (
         <div style={{
           background: 'var(--green-bg)', border: '1px solid rgba(52,211,153,0.2)',
@@ -88,51 +110,71 @@ export default function Locations() {
         </div>
       )}
 
-      {/* Locations grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-        {locations.map((loc, i) => {
-          const tc = typeConfig[loc.type] || typeConfig.other;
-          return (
-            <div key={loc.id} className="card fade-up" style={{ animationDelay: `${i * 0.05}s`, padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, border: '1px solid var(--border)',
-              }}>{loc.icon}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, marginBottom: 3 }}>{loc.name}</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text2)', marginBottom: 6 }}>{tc.label}</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--muted)', fontFamily: 'monospace' }}>
-                  {loc.lat?.toFixed(4)}, {loc.lng?.toFixed(4)} · {loc.radius}m radius
+      {locations.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', background: 'var(--bg2)', border: '1px dashed var(--border2)', borderRadius: 'var(--radius-lg)', color: 'var(--text2)' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📍</div>
+          <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 8 }}>No locations yet</h3>
+          <button type="button" className="btn btn-primary" style={{ marginTop: 8 }} onClick={() => setShowAdd(true)}>Add Your First Location</button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+          {locations.map((loc, i) => {
+            const tc = typeConfig[loc.type] || typeConfig.other;
+            return (
+              <div key={loc.id} className="card fade-up" style={{ animationDelay: `${i * 0.05}s`, padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid var(--border)' }}>
+                  {loc.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 3 }}>{loc.name}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text2)', marginBottom: 6 }}>{tc?.label || loc.type}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', fontFamily: 'monospace' }}>
+                    {Number(loc.lat).toFixed(4)}, {Number(loc.lng).toFixed(4)} · {loc.radius}m radius
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Add location modal */}
       {showAdd && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowAdd(false)}>
-          <div className="modal">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowAdd(false); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-title">+ Add Known Location</div>
+
+            {error && (
+              <div style={{ background: 'var(--red-bg)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 8, padding: '10px 14px', color: 'var(--red)', marginBottom: 16, fontSize: '0.85rem' }}>
+                {error}
+              </div>
+            )}
 
             <div className="form-group">
               <label>Location Name *</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Main Library, Office Building" />
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Main Library, Office Building"
+                autoFocus
+              />
             </div>
 
             <div className="form-group">
               <label>Type</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {LOCATION_TYPES.map((t) => (
-                  <button key={t.value} onClick={() => setForm((f) => ({ ...f, type: t.value, icon: t.icon }))} style={{
-                    padding: '5px 10px', borderRadius: 8, border: '1px solid',
-                    cursor: 'pointer', fontSize: '0.78rem', fontFamily: 'var(--font-body)',
-                    borderColor: form.type === t.value ? 'var(--accent)' : 'var(--border)',
-                    background: form.type === t.value ? 'var(--accent-glow2)' : 'var(--surface)',
-                    color: form.type === t.value ? 'var(--accent2)' : 'var(--text2)',
-                  }}>
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => handleTypeSelect(t)}
+                    style={{
+                      padding: '5px 10px', borderRadius: 8, border: '1px solid',
+                      cursor: 'pointer', fontSize: '0.78rem', fontFamily: 'var(--font-body)',
+                      borderColor: form.type === t.value ? 'var(--accent)' : 'var(--border)',
+                      background: form.type === t.value ? 'var(--accent-glow2)' : 'var(--surface)',
+                      color: form.type === t.value ? 'var(--accent2)' : 'var(--text2)',
+                    }}
+                  >
                     {t.icon} {t.label}
                   </button>
                 ))}
@@ -150,18 +192,23 @@ export default function Locations() {
               </div>
             </div>
 
-            <button className="btn btn-secondary btn-sm" onClick={captureCurrentLocation} style={{ marginBottom: 16 }}>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={captureCurrentLocation} style={{ marginBottom: 16 }}>
               📍 Use Current GPS Location
             </button>
 
             <div className="form-group">
               <label>Detection Radius (meters)</label>
-              <input type="number" value={form.radius} onChange={(e) => setForm((f) => ({ ...f, radius: e.target.value }))} min="10" max="500" />
+              <input
+                type="number"
+                value={form.radius}
+                onChange={(e) => setForm((f) => ({ ...f, radius: e.target.value }))}
+                min="10" max="500"
+              />
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-              <button className="btn btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
+              <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
                 {saving ? 'Saving…' : 'Save Location'}
               </button>
             </div>

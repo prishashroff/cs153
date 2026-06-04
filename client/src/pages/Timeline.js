@@ -3,7 +3,7 @@ import { format, parseISO, addDays, subDays } from 'date-fns';
 import { useApp } from '../context/AppContext';
 import ActivityModal from '../components/ActivityModal';
 
-const ACTIVITY_TYPES = [
+const INDIVIDUAL_ACTIVITY_TYPES = [
   { value: 'sleep', label: 'Sleeping', icon: '😴', category: 'personal' },
   { value: 'eating', label: 'Eating', icon: '🍽️', category: 'personal' },
   { value: 'class', label: 'In Class', icon: '📚', category: 'academic' },
@@ -20,10 +20,30 @@ const ACTIVITY_TYPES = [
   { value: 'other', label: 'Other', icon: '📍', category: 'other' },
 ];
 
-export { ACTIVITY_TYPES };
+const BUSINESS_ACTIVITY_TYPES = [
+  { value: 'deep_work', label: 'Deep Work', icon: '🧠', category: 'work' },
+  { value: 'deliverable', label: 'Working on Deliverable', icon: '📋', category: 'work' },
+  { value: 'meeting', label: 'Meeting', icon: '🤝', category: 'work' },
+  { value: 'touch_base', label: 'Touch Base', icon: '📞', category: 'work' },
+  { value: 'client_call', label: 'Client Call', icon: '📱', category: 'work' },
+  { value: 'email', label: 'Email / Comms', icon: '📧', category: 'work' },
+  { value: 'planning', label: 'Planning & Strategy', icon: '🗺️', category: 'work' },
+  { value: 'review', label: 'Review & Feedback', icon: '🔍', category: 'work' },
+  { value: 'training', label: 'Training / L&D', icon: '📈', category: 'academic' },
+  { value: 'lunch', label: 'Lunch Break', icon: '🍽️', category: 'personal' },
+  { value: 'commute', label: 'Commute', icon: '🚗', category: 'transit' },
+  { value: 'exercise', label: 'Exercise', icon: '💪', category: 'exercise' },
+  { value: 'admin', label: 'Admin Tasks', icon: '🗂️', category: 'work' },
+  { value: 'other', label: 'Other', icon: '📍', category: 'other' },
+];
+
+const ACTIVITY_TYPES = INDIVIDUAL_ACTIVITY_TYPES; // default export for ActivityModal fallback
+
+export { ACTIVITY_TYPES, INDIVIDUAL_ACTIVITY_TYPES, BUSINESS_ACTIVITY_TYPES };
 
 export default function Timeline() {
-  const { selectedDate, setSelectedDate, activities, calendarEvents, deleteActivity, getCategoryColor, getActivityDuration } = useApp();
+  const { selectedDate, setSelectedDate, activities, calendarEvents, deleteActivity, getCategoryColor, getActivityDuration, mode } = useApp();
+  const activityTypes = mode === 'business' ? BUSINESS_ACTIVITY_TYPES : INDIVIDUAL_ACTIVITY_TYPES;
   const [editingActivity, setEditingActivity] = useState(null);
   const [showModal, setShowModal] = useState(false);
 

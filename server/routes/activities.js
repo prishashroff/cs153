@@ -3,7 +3,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
 
 // In-memory store (replace with DB in production)
-let activities = require("../data/sampleActivities");
+let activities = [...require("../data/sampleActivities")];
 
 // GET all activities for a date
 router.get("/", (req, res) => {

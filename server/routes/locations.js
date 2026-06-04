@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-let knownLocations = require("../data/sampleLocations");
+let knownLocations = [...require("../data/sampleLocations")];
 
 router.get("/", (req, res) => res.json(knownLocations));
 
@@ -18,11 +18,9 @@ router.put("/:id", (req, res) => {
   res.json(knownLocations[idx]);
 });
 
-// Resolve location + context -> inferred activity
 router.post("/infer", (req, res) => {
   const { locationId, speed, calendarEvent, mode } = req.body;
   const location = knownLocations.find((l) => l.id === locationId);
-
   let inferred = inferActivity({ location, speed, calendarEvent, mode });
   res.json({ activity: inferred, location });
 });

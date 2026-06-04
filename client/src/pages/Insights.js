@@ -15,21 +15,24 @@ const INSIGHT_CONFIG = {
 };
 
 export default function Insights() {
-  const { activities, selectedDate, mode, apiKey, API, getActivityDuration } = useApp();
+  const { activities, selectedDate, mode, apiKey, API } = useApp();
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [userFeedback, setUserFeedback] = useState('');
 
   const runAnalysis = async () => {
-    if (!apiKey) { setError('Please set your Anthropic API key in Settings first.'); return; }
     if (activities.length === 0) { setError('No activities to analyze for this day.'); return; }
     setLoading(true); setError(''); setAnalysis(null);
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['x-api-key'] = apiKey;
+
       const res = await fetch(`${API}/ai/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
-        body: JSON.stringify({ activities, mode, date: selectedDate }),
+        headers,
+        body: JSON.stringify({ activities, mode, date: selectedDate, userFeedback: userFeedback.trim() }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -52,7 +55,6 @@ export default function Insights() {
         <p style={{ color: 'var(--text2)', marginTop: 4 }}>{dateLabel} · Powered by Claude</p>
       </div>
 
-      {/* Run analysis CTA */}
       {!analysis && !loading && (
         <div style={{
           background: 'linear-gradient(135deg, var(--bg2), var(--bg3))',
@@ -70,18 +72,31 @@ export default function Insights() {
               {error}
             </div>
           )}
+          <div style={{ maxWidth: 440, margin: '0 auto 20px', textAlign: 'left' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              💬 Feedback for AI <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+            </label>
+            <textarea
+              value={userFeedback}
+              onChange={(e) => setUserFeedback(e.target.value)}
+              placeholder="e.g. Focus more on my deep work blocks, I want better sleep recommendations…"
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: 'var(--surface)', border: '1px solid var(--border2)',
+                borderRadius: 10, padding: '10px 14px',
+                color: 'var(--text)', fontFamily: 'var(--font-body)', fontSize: '0.875rem',
+                resize: 'vertical', lineHeight: 1.55,
+                outline: 'none',
+              }}
+            />
+          </div>
           <button className="btn btn-primary" onClick={runAnalysis} style={{ fontSize: '1rem', padding: '14px 28px' }}>
             ✦ Run AI Analysis
           </button>
-          {!apiKey && (
-            <p style={{ color: 'var(--text2)', fontSize: '0.8rem', marginTop: 12 }}>
-              ⚠ No API key set — go to <a href="/settings" style={{ color: 'var(--accent2)' }}>Settings</a> to add your Anthropic API key.
-            </p>
-          )}
         </div>
       )}
 
-      {/* Loading */}
       {loading && (
         <div style={{ textAlign: 'center', padding: '80px 40px' }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid var(--border2)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite', margin: '0 auto 24px' }} />
@@ -90,10 +105,8 @@ export default function Insights() {
         </div>
       )}
 
-      {/* Results */}
       {analysis && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Score hero */}
           <div style={{
             background: 'linear-gradient(135deg, var(--bg2), var(--bg3))',
             border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
@@ -117,13 +130,30 @@ export default function Insights() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}>Day Score</div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', lineHeight: 1.3 }}>{analysis.headline}</h2>
-              <button className="btn btn-ghost btn-sm" onClick={() => setAnalysis(null)} style={{ marginTop: 12, color: 'var(--text2)' }}>
-                ↺ Re-analyze
-              </button>
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  💬 Feedback for next run
+                </label>
+                <textarea
+                  value={userFeedback}
+                  onChange={(e) => setUserFeedback(e.target.value)}
+                  placeholder="e.g. Focus more on deep work, I want sleep recommendations…"
+                  rows={2}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    background: 'var(--bg3)', border: '1px solid var(--border2)',
+                    borderRadius: 8, padding: '8px 12px',
+                    color: 'var(--text)', fontFamily: 'var(--font-body)', fontSize: '0.8rem',
+                    resize: 'vertical', lineHeight: 1.5, outline: 'none',
+                  }}
+                />
+                <button className="btn btn-ghost btn-sm" onClick={() => setAnalysis(null)} style={{ color: 'var(--text2)', alignSelf: 'flex-start' }}>
+                  ↺ Re-analyze
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Insights */}
           {analysis.insights?.length > 0 && (
             <div className="card">
               <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Insights</h3>
@@ -153,7 +183,6 @@ export default function Insights() {
             </div>
           )}
 
-          {/* Suggestions */}
           {analysis.suggestions?.length > 0 && (
             <div className="card">
               <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Recommendations</h3>
@@ -179,7 +208,6 @@ export default function Insights() {
             </div>
           )}
 
-          {/* Category breakdown */}
           {analysis.categoryBreakdown && (
             <div className="card">
               <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 16 }}>Category Assessment</h3>

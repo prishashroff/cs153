@@ -1,8 +1,42 @@
-node_modules/
-client/node_modules/
-server/node_modules/
-client/build/
+# Environments & Secrets
+server/env
 .env
 .env.local
+.env.*.local
+*.env
+*.pem
+*.key
+
+# Node.js / JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.eslintcache
+.next
+out/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.history/
+
+# OS files
 .DS_Store
-*.log
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
