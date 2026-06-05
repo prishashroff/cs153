@@ -193,3 +193,37 @@ npm run install:all   # Install dependencies for root, server, and client
 ```
 
 ---
+
+## Links to External Resources
+
+### Core Frameworks & APIs
+* **Frontend UI Runtime:** [React 18 Documentation](https://react.dev/) — Used for component state architecture, the Context API (`AppContext.js`), and single-page routing configurations.
+* **Backend Server Environment:** [Express.js Guide](https://expressjs.com/) — Utilized to build the REST API endpoints for tracking synchronization and handling inference logic.
+* **AI Engine SDK:** [Anthropic Claude API Reference](https://docs.anthropic.com/en/api/getting-started) — Leveraged for the `POST /api/ai/analyze` integration using the structural JSON response runtime.
+* **Location Tracking:** [MDN Web Docs: Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API) — Used to fetch native browser/device GPS coordinates and capture live velocity strings.
+
+### Libraries & Dependencies
+* **Data Visualization:** [Recharts Documentation](https://recharts.org/en-US/) — Employed to render the interactive dashboard metrics, productivity rings, and activity time breakdown pie charts.
+* **Date & Time Utility Library:** [date-fns Toolkit](https://date-fns.org/) — Essential for complex timeline mapping, date-shifting navigation arrays, and overlapping calendar event validation.
+* **UI Icon System:** [Lucide React Library](https://lucide.dev/guide/packages/lucide-react) — Used to fetch vector assets programmatically to support mode-aware activity category icons.
+
+### Citations & Acknowledgements
+* **CS 153 Course Staff:** Thank you to instructors Anjney Midha and Michael Bernstein, as well as TAs Ramya Iyer and Adrian Adesola Adegbesan, for providing infrastructure resources and structural project rubrics. 
+
+## Potential Use Cases & Societal Impact
+
+### How People Will Use Chronos
+
+Chronos is designed to bridge the gap between abstract calendar planning and actual physical reality. By leveraging localized background automation, users do not have to change their behavior or remember to start manual stopwatches to understand their time.
+
+*   **The Student Performance Optimization Loop (Individual Mode):** Students use Chronos to cross-examine their intentions against their actions. For instance, a student can track whether a planned 3-hour study block at Green Library actually turned into 3 hours of focused physical presence, or if severe indoor GPS drift/distractions shifted their day. By tracking sleep, classes, and social time seamlessly, students can identify exactly when burnout patterns begin to form.
+*   **The Intentional Worker Dashboard (Business Mode):** For remote and hybrid professionals, Chronos replaces intrusive screen-scraping keystroke trackers with an intentional behavioral mirror. Professionals use the customized activity vocabulary to categorize their days into deep work, touch-bases, client calls, and administrative tasks. This allows users to auditable their week to ensure high-priority deliverables are receiving adequate physical time investment.
+*   **The AI Alignment Feedback Loop:** Users leverage the text-based steering input to guide their personal AI coach. For example, a user can type, *"I have a massive CS 153 project deadline next week, evaluate my day based entirely on deep-work efficiency,"* allowing the underlying Claude engine to dynamic-shift its grading parameters and surface specific recommendations for the following day.
+
+### Value to Society & Impact
+
+Modern productivity tools are fundamentally broken: they either track screen time metrics (which conflate open browser tabs with actual progress) or demand tedious manual logging that users abandon within a week. Chronos introduces a non-invasive, behavioral approach to time auditing.
+
+1.  **Combating Burnout Culture:** By calculating an algorithmic 1-100 effectiveness score coupled with qualitative insights, Chronos highlights chronic overwork. It surfaces structural lifestyle imbalances—such as identifying when transit friction or administrative bloat is cannibalizing vital rest or deep-work intervals.
+2.  **Replacing Surveillance with Autonomy:** Traditional enterprise tracking relies on invasive corporate surveillance. Chronos empowers individuals with localized, autonomous data ownership. Because the inference engine runs on native device boundaries (matching geolocation with calendar parameters), it proves that workforce optimization can be accomplished via self-reflection rather than corporate panopticon systems.
+3.  **Actionable Behavioral Analytics:** By analyzing spatial relationships—such as how long a user stays stationary at an academic location versus a dining or wellness space—Chronos helps society rethink temporal health. It transforms raw, abstract location metrics into a clean narrative structure, allowing individuals to actively reclaim agency over their 24-hour days.
